@@ -1,0 +1,13 @@
+<h1>Books</h1>
+
+<ul>
+    {{#each books}}
+    <li><a href="/book-details/{{id}}">{{title}}</a>
+        <button> <a href="/books/edit/{{id}}">Edit</a></button>
+    </li>
+
+    {{/each}}
+
+</ul>
+<a href="/books/add"> Add New Book!</a>
+<a href="/logout">Logout</a>
