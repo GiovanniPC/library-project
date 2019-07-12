@@ -1,3 +1,15 @@
+  <nav>
+        <ul>
+            <li><a href="/">Home</a></li>
+            {{#unless user}}
+            <li><a href="/auth/login">Login</a></li>
+            {{/unless}}
+            {{#if user}}
+            <li><a href="/auth/logout">Logout</a></li>
+            {{/if}}
+        </ul>
+    </nav>
+
 <h1>Books</h1>
 
 <ul>
@@ -10,4 +22,5 @@
 
 </ul>
 <a href="/books/add"> Add New Book!</a>
-<a href="/logout">Logout</a>
+
+<a href="/auth/logout">Logout</a>

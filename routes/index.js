@@ -1,103 +1,118 @@
 const express = require('express');
+
 const router = express.Router();
+const ensureLogin = require('connect-ensure-login');
 const Book = require('../models/book');
 const Author = require('../models/author');
-const ensureLogin = require("connect-ensure-login");
 
-router.get('/', (req,res) =>{
-    res.render('index');
+router.get('/', (req, res) => {
+  res.redirect('/books');
 });
 
-router.get('/books', ensureLogin.ensureLoggedIn('/auth/login'), (req,res) =>{
-    // for test
-    // let books = [
-    //     {title: 'livro'},
-    //     {title: 'livro2'}
-    // ]
+router.get('/books', (req, res) => {
+  // for test
+  // let books = [
+  //     {title: 'livro'},
+  //     {title: 'livro2'}
+  // ]
 
-    Book.find()
-    .then(books => {
-        res.render('books', {books});
+  Book.find()
+    .then((books) => {
+      res.render('books', { books, user: req.user });
     })
     .catch(err => console.log(err));
 });
 
-router.get('/book-details/:bookID', (req,res) =>{
-    const book = req.params.bookID;
+router.get('/book-details/:bookID', (req, res) => {
+  const book = req.params.bookID;
 
-    Book.findById(book)
+  Book.findById(book)
     .populate('author')
-    .then(book => {
-        res.render('book-details', { book });
+    .then((book) => {
+      res.render('book-details', { book });
     })
     .catch(err => console.log(err));
 });
 
-router.get('/books/add', (req,res) =>{
-    Author.find()
+router.get('/books/add', ensureLogin.ensureLoggedIn('/auth/login'), (req, res) => {
+  Author.find({}, null, { sort: { name: 1 } })
     .then((autor) => {
-        res.render('book-add', {autor});
+      res.render('book-add', { autor, user: req.user });
     })
-    .catch(err => console.log(err))    
+    .catch(err => console.log(err));
 });
 
-router.post('/books/add', (req,res) =>{
-    const { title, author, description, rating } = req.body;
-    const newBook = new Book({ title, author, description, rating})
-    newBook.save()
+router.post('/books/add', (req, res) => {
+  const {
+    title, author, description, rating, owner,
+  } = req.body;
+  const newBook = new Book({
+    title, author, description, rating, owner,
+  });
+  newBook.save()
     .then((book) => {
-      res.redirect('/books');
+      res.redirect('/');
     })
     .catch((error) => {
       console.log(error);
-    })
+    });
 });
 
-router.get('/books/edit/:bookID', (req,res) =>{
-    Book.findById(req.params.bookID)
-    .then(book => {
-        res.render('book-edit', { book });
-    })
-    .catch(err => console.log(err))
-});
-
-router.post('/books/edit/:bookID', (req,res) =>{
-    const { title, author, description, rating, } = req.body;
-
-    Book.update({_id: req.params.bookID}, { $set: {title, author, description, rating }})
+router.get('/books/edit/:bookID', ensureLogin.ensureLoggedIn('/auth/login'), (req, res) => {
+  Book.findById(req.params.bookID)
     .then((book) => {
-      res.redirect('/books');
+      res.render('book-edit', { book, user: req.user });
+    })
+    .catch(err => console.log(err));
+});
+
+router.post('/books/edit/:bookID', (req, res) => {
+  const {
+    title, author, description, rating,
+  } = req.body;
+
+  Book.update({ _id: req.params.bookID }, {
+    $set: {
+      title, author, description, rating,
+    },
+  })
+    .then((book) => {
+      res.redirect('/');
     })
     .catch((error) => {
       console.log(error);
-    })
- });
+    });
+});
 
- router.get('/authors/add', (req, res, next) => {
-    res.render("author-add")
+router.get('/authors/add', (req, res) => {
+  res.render('author-add');
+});
+
+router.post('/authors/add', ensureLogin.ensureLoggedIn('/auth/login'), (req, res) => {
+  const {
+    name, lastName, nationality, birthday, pictureUrl,
+  } = req.body;
+  const newAuthor = new Author({
+    name, lastName, nationality, birthday, pictureUrl,
   });
-  
-  router.post('/authors/add', (req, res, next) => {
-    const { name, lastName, nationality, birthday, pictureUrl } = req.body;
-    const newAuthor = new Author({ name, lastName, nationality, birthday, pictureUrl})
-    newAuthor.save()
+  newAuthor.save()
     .then((book) => {
-      res.redirect('/books')
+      res.redirect('/');
     })
     .catch((error) => {
-      console.log(error)
-    })
-  });
+      console.log(error);
+    });
+});
 
-  router.post('/reviews/add/:bookID', (req, res, next) => {
-    const { user, comments } = req.body;
-    Book.update({ _id: req.params.bookID }, { $push: { reviews: { user, comments }}})
-    .then(book => {
-      res.redirect('/book-details/' + req.params.bookID)
+router.post('/reviews/add/:bookID', (req, res) => {
+  const { user, comments } = req.body;
+  Book.update({ _id: req.params.bookID }, { $push: { reviews: { user, comments } } })
+    .then((book) => {
+      res.redirect(`/book-details/${req.params.bookID}`);
     })
     .catch((error) => {
-      console.log(error)
-    })
-  });
+      console.log(error);
+    });
+});
 
 module.exports = router;

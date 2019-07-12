@@ -18,27 +18,29 @@
 
 // module.exports = Book;
 
-const mongoose = require("mongoose");
-const Schema   = mongoose.Schema;
+const mongoose = require('mongoose');
+
+const { Schema } = mongoose;
 
 const bookSchema = new Schema({
   title: String,
   description: String,
-  author: [ { type : Schema.Types.ObjectId, ref: 'Author' } ],
+  author: [{ type: Schema.Types.ObjectId, ref: 'Author' }],
   rating: Number,
-  reviews: [ 
+  reviews: [
     {
       user: String,
-      comments: String
-    } 
-  ]
+      comments: String,
+    },
+  ],
+  owner: Schema.Types.ObjectId,
 }, {
   timestamps: {
-    createdAt: "createdAt",
-    updatedAt: "updatedAt"
-  }
+    createdAt: 'createdAt',
+    updatedAt: 'updatedAt',
+  },
 });
 
-const Book = mongoose.model("Book", bookSchema);
+const Book = mongoose.model('Book', bookSchema);
 
 module.exports = Book;
